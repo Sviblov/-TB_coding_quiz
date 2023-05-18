@@ -38,6 +38,7 @@ class Database:
         self.users= database['TG_Users']
         self.user_state= database['TG_User_State']
         self.standard_messages= database['TG_Standard_Messages']
+        self.questions= database['TG_Questions']
         cursor = self.standard_messages.find()
         self.standardMessages = cursor[0]
 
@@ -58,6 +59,12 @@ class Database:
         cursor = self.standard_messages.find()
         return cursor[0]
 
+
+    def getQuestions(self, difficulty):
+        filter= {'difficulty': difficulty}
+
+        cursor = self.questions.find(filter).sort("order", pymongo.ASCENDING)
+        return cursor
 #put User to default status
 #We have tables TG_Users and TG_User_State - in default status it has False for search flag and -1 in account
     def setUserToDefault(self, user):
@@ -93,13 +100,7 @@ if __name__ == "__main__":
     DB =Database(URL = os.environ.get('DB_STRING_DEV'),database ='QB_Database')
     DB.openConnection()
     
-    cursor = DB.getTaskList('EmotionalDependency')
-    i=0
-    for recomendation in cursor:
-       
-       DB.putRecomendation('EmotionalDependency',i,'text', recomendation)
-       
-       i=i+1
+   
 
 
     DB.closeConnection()

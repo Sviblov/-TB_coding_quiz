@@ -20,7 +20,44 @@ class IGT_Markup(object):
         
         markup = telebot.types.InlineKeyboardMarkup()
  
-        markup.row(telebot.types.InlineKeyboardButton("welcome", callback_data='welcome_user_CB'))
+        markup.row(telebot.types.InlineKeyboardButton("Теория", callback_data='Theory_CB'))
+        markup.row(telebot.types.InlineKeyboardButton("Тестирование", callback_data='Practice_CB'))
+        markup.row(telebot.types.InlineKeyboardButton("Текущий статус", callback_data='nothing'))
+           
+        return markup
+    
+    @staticmethod
+    def getTheoryMarkup():
+        
+        markup = telebot.types.InlineKeyboardMarkup()
+ 
+        
+        markup.row(telebot.types.InlineKeyboardButton("Тестирование", callback_data='Practice_CB'))
         
            
+        return markup
+    
+    
+
+    @staticmethod
+    def getStartQuiz():
+        
+        markup = telebot.types.InlineKeyboardMarkup()
+ 
+        
+        markup.row(telebot.types.InlineKeyboardButton("Отправить результаты", callback_data='sendResults'))
+        
+           
+        return markup 
+    @staticmethod
+    def getPracticeMarkup():
+        
+        markup = telebot.types.InlineKeyboardMarkup()
+ 
+        
+        markup.row(telebot.types.InlineKeyboardButton("Junior", callback_data='Practice_test_junior_CB'))
+        markup.row(telebot.types.InlineKeyboardButton("Middle", callback_data='Practice_test_middle_CB'))
+        markup.row(telebot.types.InlineKeyboardButton("Senior", callback_data='Practice_test_senior_CB'))
+        markup.row(telebot.types.InlineKeyboardButton("<- Назад", callback_data='Main_Menu_CB'))
+
         return markup
