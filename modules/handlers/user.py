@@ -28,15 +28,19 @@ def welcome_command_user(message: Message, bot: TeleBot):
    
     
     if isinstance(message, CallbackQuery):   
+        from_user=message.from_user
         message = message.message
+        
+    else:
+        from_user=message.from_user
 
     DB: Database = bot.db_connection
-    DB.setUserToDefault(message.from_user)
+    DB.setUserToDefault(from_user)
     
     #DB.clearScheduledMessagesForUser(message.from_user)
     
    
-    replyText = DB.standardMessages['startNotAdmin'].format(message.from_user.first_name)
+    replyText = DB.standardMessages['startNotAdmin']
     replyMarkup = IGT_Markup.getWelcomeUserMarkup()
    
     replyMessage = bot.send_message(message.chat.id, replyText,reply_markup=replyMarkup, parse_mode='html', disable_web_page_preview=True)
@@ -79,6 +83,11 @@ def send_questionaire_callback(callBack: CallbackQuery, bot: TeleBot):
     replyMarkup=IGT_Markup.getStartQuiz()
     questions = DB.getQuestions(quizDifficulty)
 
+    DB.increaseNumberOfTries(callBack.from_user.id, quizDifficulty)
+    
+
+    sentPolls=[]
+    sentPollsId=""
     for question in questions:
         if question['questionType']=='text' or question['questionType']=='textCode':
             questionText=question['questionText']
@@ -90,7 +99,24 @@ def send_questionaire_callback(callBack: CallbackQuery, bot: TeleBot):
                 bot.send_message(callBack.message.chat.id, questionCode, parse_mode='html', disable_web_page_preview=True)
     
             #bot.send_message(callBack.message.chat.id, questionText, parse_mode='html', disable_web_page_preview=True)
-            poll=bot.send_poll(callBack.message.chat.id,questionText, options = answers,open_period=600, type="quiz", correct_option_id=correctAnswer)
+            poll=bot.send_poll(callBack.message.chat.id,questionText, options = answers,open_period=600, type="quiz", correct_option_id=correctAnswer, is_anonymous=False)
+            sentPollsId=sentPollsId+poll.poll.id+"_"
+            sentPolls.append({
+                'id': poll.poll.id,
+                'correctOptionId': correctAnswer,
+                'isAnsweredCorrect': False
+            })
+    
+    DB.registerPoll(callBack.from_user.id, quizDifficulty, sentPolls,sentPollsId)
 
     bot.send_message(callBack.message.chat.id, replyText, reply_markup=replyMarkup, parse_mode='html', disable_web_page_preview=True)
     logging.info(f"Start message: username: {callBack.from_user.first_name}, userId: {callBack.from_user.id}, message: {callBack.data}")
+
+
+def handle_poll_answer(pollAnswer: PollAnswer, bot: TeleBot):
+    
+    DB: Database = bot.db_connection
+
+    DB.updatePollAnswer(pollAnswer.user.id, pollAnswer.poll_id, pollAnswer.option_ids)
+    
+    

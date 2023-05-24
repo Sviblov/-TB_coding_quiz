@@ -22,7 +22,7 @@ class IGT_Markup(object):
  
         markup.row(telebot.types.InlineKeyboardButton("Теория", callback_data='Theory_CB'))
         markup.row(telebot.types.InlineKeyboardButton("Тестирование", callback_data='Practice_CB'))
-        markup.row(telebot.types.InlineKeyboardButton("Текущий статус", callback_data='nothing'))
+        markup.row(telebot.types.InlineKeyboardButton("Текущий статус", callback_data='getStatistics'))
            
         return markup
     
@@ -45,8 +45,8 @@ class IGT_Markup(object):
         markup = telebot.types.InlineKeyboardMarkup()
  
         
-        markup.row(telebot.types.InlineKeyboardButton("Отправить результаты", callback_data='sendResults'))
-        
+        markup.row(telebot.types.InlineKeyboardButton("Текущий статус", callback_data='getStatistics'))
+        markup.row(telebot.types.InlineKeyboardButton("<- Назад", callback_data='Main_Menu_CB'))
            
         return markup 
     @staticmethod

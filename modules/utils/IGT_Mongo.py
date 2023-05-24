@@ -39,6 +39,7 @@ class Database:
         self.user_state= database['TG_User_State']
         self.standard_messages= database['TG_Standard_Messages']
         self.questions= database['TG_Questions']
+        self.user_statistics=database['TG_User_Statistics']
         cursor = self.standard_messages.find()
         self.standardMessages = cursor[0]
 
@@ -65,6 +66,67 @@ class Database:
 
         cursor = self.questions.find(filter).sort("order", pymongo.ASCENDING)
         return cursor
+    
+    def getNumberOfTries(self, userId,difficulty):
+        filter={'userid': userId}
+        cursor = self.user_state.find_one(filter)
+        return cursor['numberTries_'+difficulty]
+
+    def increaseNumberOfTries(self, userId, difficulty):
+        filter={'userid': userId}
+
+        newnumber=self.getNumberOfTries(userId, difficulty)+1
+
+        self.user_state.update_one(filter, { "$set":{'numberTries_'+difficulty: newnumber}})
+
+    def registerPoll(self, userId, difficulty, polls, pollIds):
+        userStatistics={
+            'userid': userId,
+            'difficulty': difficulty,
+            'pollIds': pollIds,
+            'isPassed': False,
+            'questions': polls
+        }
+        self.user_statistics.insert_one(userStatistics)
+
+
+    def updatePollAnswer(self, userId, pollId, selectedOption):
+        filter={
+            'userid': userId,
+            'pollIds': {"$regex" : pollId}
+            }
+        Questinaire = self.user_statistics.find_one(filter)
+        newQuestions=[]
+        isAnswerCorrect=False
+        
+        for poll in Questinaire['questions']:
+            
+            if poll['id']==str(pollId):
+                if poll['correctOptionId']==selectedOption[0]:
+                    newQuestions.append({
+                        'id': poll['id'],
+                        'correctOptionId': poll['correctOptionId'],
+                        'isAnsweredCorrect': True
+                    })
+                    isAnswerCorrect=True
+                else:
+                    newQuestions.append(poll)
+            else:
+                newQuestions.append(poll)
+            
+
+        countCorrect=0
+        if isAnswerCorrect:
+            self.user_statistics.update_one(filter,{ "$set":{'questions': newQuestions}})
+            for question in newQuestions:
+                if question['isAnsweredCorrect']:
+                    countCorrect=countCorrect+1
+            
+            if countCorrect>2:
+                self.user_statistics.update_one(filter,{ "$set":{'isPassed': True}}) 
+
+            
+
 #put User to default status
 #We have tables TG_Users and TG_User_State - in default status it has False for search flag and -1 in account
     def setUserToDefault(self, user):
@@ -86,12 +148,35 @@ class Database:
             
             defaultUserInfo = { 
                 'userid': user.id,
-                'name': user.first_name
+                'name': user.first_name,
+                'numberTries_junior': 0,
+                'numberTries_middle': 0,
+                'numberTries_senior': 0
+
             }
+        
 
             self.user_state.insert_one(defaultUserInfo)
+    
+    # def getNumberOfTries(self, userId, difficulty):
+    #     filter={
+    #         'userid': userId,
+    #         'difficulty': difficulty
+    #         }
+        
+    #     return self.user_statistics.count_documents(filter)
 
-   
+
+
+    # def getNumberOfSuccessTries(self, userId, difficulty):
+    #     filter={
+    #         'userid': userId,
+    #         'difficulty': difficulty
+    #         }
+        
+    #     questionaries= self.user_statistics.find(filter)
+        
+
 # # for testing
 if __name__ == "__main__":
 
