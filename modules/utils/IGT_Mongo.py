@@ -66,11 +66,6 @@ class Database:
 
         cursor = self.questions.find(filter).sort("order", pymongo.ASCENDING)
         return cursor
-    
-    def getNumberOfTries(self, userId,difficulty):
-        filter={'userid': userId}
-        cursor = self.user_state.find_one(filter)
-        return cursor['numberTries_'+difficulty]
 
     def increaseNumberOfTries(self, userId, difficulty):
         filter={'userid': userId}
@@ -158,23 +153,24 @@ class Database:
 
             self.user_state.insert_one(defaultUserInfo)
     
-    # def getNumberOfTries(self, userId, difficulty):
-    #     filter={
-    #         'userid': userId,
-    #         'difficulty': difficulty
-    #         }
+    def getNumberOfTries(self, userId, difficulty):
+        filter={
+            'userid': userId,
+            'difficulty': difficulty
+            }
         
-    #     return self.user_statistics.count_documents(filter)
+        return self.user_statistics.count_documents(filter)
 
 
 
-    # def getNumberOfSuccessTries(self, userId, difficulty):
-    #     filter={
-    #         'userid': userId,
-    #         'difficulty': difficulty
-    #         }
+    def getNumberOfSuccessTries(self, userId, difficulty):
+        filter={
+            'userid': userId,
+            'difficulty': difficulty,
+            'isPassed': True
+            }
         
-    #     questionaries= self.user_statistics.find(filter)
+        return self.user_statistics.count_documents(filter)
         
 
 # # for testing

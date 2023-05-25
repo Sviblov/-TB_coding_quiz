@@ -99,7 +99,8 @@ def send_questionaire_callback(callBack: CallbackQuery, bot: TeleBot):
                 bot.send_message(callBack.message.chat.id, questionCode, parse_mode='html', disable_web_page_preview=True)
     
             #bot.send_message(callBack.message.chat.id, questionText, parse_mode='html', disable_web_page_preview=True)
-            poll=bot.send_poll(callBack.message.chat.id,questionText, options = answers,open_period=600, type="quiz", correct_option_id=correctAnswer, is_anonymous=False)
+            poll=bot.send_poll(callBack.message.chat.id,questionText, is_anonymous=False, options = answers, open_period=600, type="quiz", correct_option_id=correctAnswer)
+            
             sentPollsId=sentPollsId+poll.poll.id+"_"
             sentPolls.append({
                 'id': poll.poll.id,
@@ -114,9 +115,23 @@ def send_questionaire_callback(callBack: CallbackQuery, bot: TeleBot):
 
 
 def handle_poll_answer(pollAnswer: PollAnswer, bot: TeleBot):
-    
+    logging.info('user answered')
     DB: Database = bot.db_connection
 
     DB.updatePollAnswer(pollAnswer.user.id, pollAnswer.poll_id, pollAnswer.option_ids)
     
+    
+def get_user_statistics(callBack: CallbackQuery, bot: TeleBot):
+   
+    DB: Database = bot.db_connection
+    difficultyList=['junior', 'middle', 'senior']
+    replyText=DB.standardMessages['statisticsIntro']
+    
+    for difficulty in difficultyList:
+        numberOfTries=DB.getNumberOfTries(callBack.from_user.id, difficulty)
+        numberOfPassed=DB.getNumberOfSuccessTries(callBack.from_user.id, difficulty)
+        replyText=replyText+DB.standardMessages['statisticsLevel'].format(difficulty, numberOfTries, numberOfPassed)
+    
+    replyText=replyText[:-1]
+    bot.send_message(callBack.message.chat.id, replyText, parse_mode='html', disable_web_page_preview=True)
     
